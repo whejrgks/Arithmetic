@@ -18,6 +18,12 @@ class Arithmetic:
         if b == 0:
             raise ArithmeticError("Division by zero")
         return a // b
+    
+    def divide_quotient(self, a, b):
+        """몫 계산 연산 (소수점 포함)"""
+        if b == 0:
+            raise ArithmeticError("Division by zero")
+        return a / b
 
 
 if __name__ == "__main__":
@@ -51,6 +57,11 @@ if __name__ == "__main__":
     print("【나눗셈 연산】")
     print(f"  5 / 2 = {arithmetic.divide(5, 2)} (정수 나눗셈)")
     print(f"  -10 / 2 = {arithmetic.divide(-10, 2)}")
+    print()
+    
+    # 몫 계산 예제
+    print("【몫 계산 연산】")
+    print(f"  5 ÷ 2 = {arithmetic.divide_quotient(5, 2)} (소수점 포함)")
     print()
     
     # 예외 처리 예제
