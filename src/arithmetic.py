@@ -9,6 +9,10 @@ class Arithmetic:
         """뺄셈 연산"""
         return a - b
     
+    def multiply(self, a, b):
+        """곱셈 연산"""
+        return a * b
+    
     def divide(self, a, b):
         """나눗셈 연산 (정수 나눗셈, 소수점 버림)"""
         if b == 0:
@@ -35,6 +39,12 @@ if __name__ == "__main__":
     # 뺄셈 예제
     print("【뺄셈 연산】")
     print(f"  5 - 2 = {arithmetic.subtract(5, 2)}")
+    print()
+    
+    # 곱셈 예제
+    print("【곱셈 연산】")
+    print(f"  -5 * -3 = {arithmetic.multiply(-5, -3)}")
+    print(f"  0 * 10 = {arithmetic.multiply(0, 10)}")
     print()
     
     # 나눗셈 예제
