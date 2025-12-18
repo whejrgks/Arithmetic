@@ -23,13 +23,35 @@ from src.calculator_controller import CalculatorController
 class CalculatorWindow(QMainWindow):
     """계산기 메인 윈도우"""
     
+    # 스타일 상수 정의
+    # 색상
+    COLOR_BACKGROUND = "#1e1e1e"
+    COLOR_NUMBER_BUTTON = "#2d2d2d"
+    COLOR_OPERATOR_BUTTON = "#4a4a4a"
+    COLOR_EQUALS_BUTTON = "#0078d4"
+    COLOR_CLEAR_BUTTON = "#d13438"
+    COLOR_TEXT = "white"
+    
+    # 폰트
+    FONT_FAMILY = "Arial"
+    FONT_SIZE_DISPLAY = 24
+    FONT_SIZE_BUTTON = 14
+    
+    # 크기
+    WINDOW_WIDTH = 320
+    WINDOW_HEIGHT = 450
+    BUTTON_MIN_HEIGHT = 50
+    
+    # 스타일 템플릿
+    STYLE_BUTTON_BASE = "color: {color}; border: none; border-radius: 4px;"
+    STYLE_BUTTON_BOLD = "color: {color}; border: none; border-radius: 4px; font-weight: bold;"
+    
     def __init__(self):
         """계산기 윈도우 초기화"""
         super().__init__()
         self._controller = CalculatorController()
         self._controller.set_display_callback(self._update_display)
         self._init_ui()
-        self._setup_shortcuts()  # 키보드 단축키 설정
         self._setup_shortcuts()  # 키보드 단축키 설정
     
     def _init_ui(self) -> None:
@@ -44,10 +66,10 @@ class CalculatorWindow(QMainWindow):
           - 기능 버튼 (=, +/-, Clear, .)
         """
         self.setWindowTitle("계산기")
-        self.setFixedSize(320, 450)
+        self.setFixedSize(self.WINDOW_WIDTH, self.WINDOW_HEIGHT)
         
         # 윈도우 스타일 설정
-        self.setStyleSheet("background-color: #1e1e1e;")
+        self.setStyleSheet(f"background-color: {self.COLOR_BACKGROUND};")
         
         # 중앙 위젯
         central_widget = QWidget()
@@ -61,11 +83,11 @@ class CalculatorWindow(QMainWindow):
         self._display = QLineEdit()
         self._display.setReadOnly(True)
         self._display.setAlignment(Qt.AlignRight)
-        self._display.setFont(QFont("Arial", 24, QFont.Bold))
+        self._display.setFont(QFont(self.FONT_FAMILY, self.FONT_SIZE_DISPLAY, QFont.Bold))
         self._display.setText("0")
         self._display.setStyleSheet(
-            "background-color: #1e1e1e; color: white; "
-            "border: 2px solid #4a4a4a; border-radius: 4px; "
+            f"background-color: {self.COLOR_BACKGROUND}; color: {self.COLOR_TEXT}; "
+            f"border: 2px solid {self.COLOR_OPERATOR_BUTTON}; border-radius: 4px; "
             "padding: 10px;"
         )
         main_layout.addWidget(self._display)
@@ -99,79 +121,21 @@ class CalculatorWindow(QMainWindow):
             (3, 3, "=", "equals"),
         ]
         
-        # 나눗셈 버튼 추가 (별도 행 또는 기존 레이아웃에 추가)
-        # 이미지에는 없지만 기능상 필요하므로 추가
-        divide_button = QPushButton("/")
-        divide_button.setFont(QFont("Arial", 14))
-        divide_button.setMinimumHeight(50)
-        divide_button.setStyleSheet("background-color: #4a4a4a; color: white;")
-        divide_button.clicked.connect(lambda: self._on_operator_clicked("/"))
-        button_layout.addWidget(divide_button, 4, 3)  # Clear 버튼 옆에 배치
-        
         # 버튼 생성 및 연결
         for row, col, text, style in buttons:
-            button = QPushButton(text)
-            button.setFont(QFont("Arial", 14))
-            button.setMinimumHeight(50)
-            
-            # 스타일 적용 (이미지 디자인 반영)
-            if style == "operator":
-                # 연산자 버튼: 어두운 회색 배경
-                button.setStyleSheet(
-                    "background-color: #4a4a4a; color: white; "
-                    "border: none; border-radius: 4px;"
-                )
-            elif style == "equals":
-                # 등호 버튼: 파란색 배경 (이미지에서 강조)
-                button.setStyleSheet(
-                    "background-color: #0078d4; color: white; "
-                    "border: none; border-radius: 4px; font-weight: bold;"
-                )
-            elif style == "function":
-                # 기능 버튼: 어두운 회색 배경
-                button.setStyleSheet(
-                    "background-color: #4a4a4a; color: white; "
-                    "border: none; border-radius: 4px;"
-                )
-            else:  # number
-                # 숫자 버튼: 더 어두운 회색 배경
-                button.setStyleSheet(
-                    "background-color: #2d2d2d; color: white; "
-                    "border: none; border-radius: 4px;"
-                )
-            
-            # 호버 효과 추가
-            button.setCursor(Qt.PointingHandCursor)
-            
-            # 시그널-슬롯 연결
-            # 숫자 버튼 클릭 → controller.input_number()
-            if text.isdigit():
-                button.clicked.connect(lambda checked, d=text: self._on_number_clicked(d))
-            # 연산자 버튼 클릭 → controller.set_operator()
-            elif text in ("+", "−", "×"):
-                button.clicked.connect(lambda checked, op=text: self._on_operator_clicked(op))
-            # 등호 버튼 클릭 → controller.calculate()
-            elif text == "=":
-                button.clicked.connect(self._on_equals_clicked)
-            # 부호 변경 버튼 클릭 → controller.toggle_sign()
-            elif text == "+/−":
-                button.clicked.connect(self._on_toggle_sign_clicked)
-            # 소수점 버튼 클릭 → controller.input_decimal()
-            elif text == ".":
-                button.clicked.connect(self._on_decimal_clicked)
-            
+            button = self._create_button(text, style)
+            self._connect_button_signal(button, text)
             button_layout.addWidget(button, row, col)
         
+        # 나눗셈 버튼 추가 (별도 행 또는 기존 레이아웃에 추가)
+        # 이미지에는 없지만 기능상 필요하므로 추가
+        divide_button = self._create_button("/", "operator")
+        self._connect_button_signal(divide_button, "/")
+        button_layout.addWidget(divide_button, 4, 3)  # Clear 버튼 옆에 배치
+        
         # Clear 버튼 (별도 추가)
-        clear_button = QPushButton("Clear")
-        clear_button.setFont(QFont("Arial", 14))
-        clear_button.setMinimumHeight(50)
-        clear_button.setStyleSheet(
-            "background-color: #d13438; color: white; "
-            "border: none; border-radius: 4px; font-weight: bold;"
-        )
-        clear_button.setCursor(Qt.PointingHandCursor)
-        clear_button.clicked.connect(self._on_clear_clicked)
+        clear_button = self._create_button("Clear", "clear")
+        self._connect_button_signal(clear_button, "Clear")
         button_layout.addWidget(clear_button, 4, 0, 1, 3)  # 나눗셈 버튼 공간 확보
     
     def _update_display(self, value: str) -> None:
@@ -219,6 +183,87 @@ class CalculatorWindow(QMainWindow):
     def _on_decimal_clicked(self) -> None:
         """소수점 버튼 클릭 핸들러"""
         self._controller.input_decimal()
+    
+    def _get_button_style(self, style_type: str) -> str:
+        """
+        버튼 스타일 문자열을 반환합니다.
+        
+        Args:
+            style_type: 버튼 스타일 타입 ("number", "operator", "function", "equals", "clear")
+            
+        Returns:
+            CSS 스타일 문자열
+        """
+        style_map = {
+            "number": {
+                "background": self.COLOR_NUMBER_BUTTON,
+                "template": self.STYLE_BUTTON_BASE
+            },
+            "operator": {
+                "background": self.COLOR_OPERATOR_BUTTON,
+                "template": self.STYLE_BUTTON_BASE
+            },
+            "function": {
+                "background": self.COLOR_OPERATOR_BUTTON,
+                "template": self.STYLE_BUTTON_BASE
+            },
+            "equals": {
+                "background": self.COLOR_EQUALS_BUTTON,
+                "template": self.STYLE_BUTTON_BOLD
+            },
+            "clear": {
+                "background": self.COLOR_CLEAR_BUTTON,
+                "template": self.STYLE_BUTTON_BOLD
+            }
+        }
+        
+        style_config = style_map.get(style_type, style_map["number"])
+        return f"background-color: {style_config['background']}; {style_config['template'].format(color=self.COLOR_TEXT)}"
+    
+    def _create_button(self, text: str, style_type: str) -> QPushButton:
+        """
+        버튼을 생성하고 스타일을 적용합니다.
+        
+        Args:
+            text: 버튼 텍스트
+            style_type: 버튼 스타일 타입 ("number", "operator", "function", "equals", "clear")
+            
+        Returns:
+            생성된 QPushButton 인스턴스
+        """
+        button = QPushButton(text)
+        button.setFont(QFont(self.FONT_FAMILY, self.FONT_SIZE_BUTTON))
+        button.setMinimumHeight(self.BUTTON_MIN_HEIGHT)
+        button.setStyleSheet(self._get_button_style(style_type))
+        button.setCursor(Qt.PointingHandCursor)
+        return button
+    
+    def _connect_button_signal(self, button: QPushButton, text: str) -> None:
+        """
+        버튼의 시그널을 적절한 슬롯에 연결합니다.
+        
+        Args:
+            button: 연결할 버튼
+            text: 버튼 텍스트 (기능 판별용)
+        """
+        # 숫자 버튼 클릭 → controller.input_number()
+        if text.isdigit():
+            button.clicked.connect(lambda checked, d=text: self._on_number_clicked(d))
+        # 연산자 버튼 클릭 → controller.set_operator()
+        elif text in ("+", "−", "×", "/"):
+            button.clicked.connect(lambda checked, op=text: self._on_operator_clicked(op))
+        # 등호 버튼 클릭 → controller.calculate()
+        elif text == "=":
+            button.clicked.connect(self._on_equals_clicked)
+        # 부호 변경 버튼 클릭 → controller.toggle_sign()
+        elif text == "+/−":
+            button.clicked.connect(self._on_toggle_sign_clicked)
+        # 소수점 버튼 클릭 → controller.input_decimal()
+        elif text == ".":
+            button.clicked.connect(self._on_decimal_clicked)
+        # Clear 버튼 클릭 → controller.clear()
+        elif text == "Clear":
+            button.clicked.connect(self._on_clear_clicked)
     
     def _setup_shortcuts(self) -> None:
         """키보드 단축키 설정"""
