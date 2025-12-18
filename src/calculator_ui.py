@@ -65,21 +65,37 @@ class CalculatorWindow(QMainWindow):
           - 연산자 버튼 (+, -, ×, /)
           - 기능 버튼 (=, +/-, Clear, .)
         """
+        self._setup_window()
+        main_layout = self._setup_main_layout()
+        self._create_display(main_layout)
+        self._create_button_grid(main_layout)
+    
+    def _setup_window(self) -> None:
+        """윈도우 기본 설정"""
         self.setWindowTitle("계산기")
         self.setFixedSize(self.WINDOW_WIDTH, self.WINDOW_HEIGHT)
-        
-        # 윈도우 스타일 설정
         self.setStyleSheet(f"background-color: {self.COLOR_BACKGROUND};")
+    
+    def _setup_main_layout(self) -> QVBoxLayout:
+        """
+        메인 레이아웃을 설정합니다.
         
-        # 중앙 위젯
+        Returns:
+            메인 레이아웃 (QVBoxLayout)
+        """
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        
-        # 메인 레이아웃
         main_layout = QVBoxLayout()
         central_widget.setLayout(main_layout)
+        return main_layout
+    
+    def _create_display(self, main_layout: QVBoxLayout) -> None:
+        """
+        디스플레이를 생성하고 레이아웃에 추가합니다.
         
-        # 디스플레이
+        Args:
+            main_layout: 메인 레이아웃
+        """
         self._display = QLineEdit()
         self._display.setReadOnly(True)
         self._display.setAlignment(Qt.AlignRight)
@@ -91,8 +107,14 @@ class CalculatorWindow(QMainWindow):
             "padding: 10px;"
         )
         main_layout.addWidget(self._display)
+    
+    def _create_button_grid(self, main_layout: QVBoxLayout) -> None:
+        """
+        버튼 그리드를 생성하고 레이아웃에 추가합니다.
         
-        # 버튼 그리드
+        Args:
+            main_layout: 메인 레이아웃
+        """
         button_layout = QGridLayout()
         main_layout.addLayout(button_layout)
         
