@@ -98,11 +98,14 @@ class CalculatorController:
         연산자를 설정합니다.
         
         Args:
-            operator: 연산자 문자열 (+, -, ×, /)
+            operator: 연산자 문자열 (+, -, ×, *, /, ÷ 등 UI 표시용 기호 포함)
         """
         # 에러 상태일 경우 무시
         if self._current_value == "Error":
             return
+        
+        # UI 표시용 기호를 내부 기호로 정규화
+        operator = self._normalize_operator(operator)
         
         if not OperationFactory.is_supported(operator):
             return
@@ -200,4 +203,24 @@ class CalculatorController:
             현재 디스플레이 값 문자열
         """
         return self._current_value
+    
+    def _normalize_operator(self, operator: str) -> str:
+        """
+        UI 표시용 연산자 기호를 내부 연산자 기호로 정규화합니다.
+        
+        Args:
+            operator: UI 표시용 연산자 기호 (예: "−", "×", "÷")
+            
+        Returns:
+            내부 연산자 기호 (예: "-", "*", "/")
+        """
+        # UI 표시용 기호를 내부 기호로 매핑
+        operator_map = {
+            "−": "-",  # 빼기 기호 (U+2212) → 하이픈 마이너스
+            "×": "*",  # 곱하기 기호 (U+00D7) → 별표
+            "÷": "/",  # 나누기 기호 (U+00F7) → 슬래시
+        }
+        
+        # 매핑에 있으면 변환, 없으면 그대로 반환
+        return operator_map.get(operator, operator)
 

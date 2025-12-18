@@ -167,11 +167,9 @@ class CalculatorWindow(QMainWindow):
         연산자 버튼 클릭 핸들러
         
         Args:
-            operator: 클릭된 연산자
+            operator: 클릭된 연산자 (UI 표시용 기호 포함 가능)
         """
-        # − 기호를 -로 변환
-        if operator == "−":
-            operator = "-"
+        # 기호 변환은 컨트롤러에서 처리
         self._controller.set_operator(operator)
     
     def _on_equals_clicked(self) -> None:
