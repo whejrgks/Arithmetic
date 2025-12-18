@@ -18,33 +18,11 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QKeySequence
 
 from src.calculator_controller import CalculatorController
+from src.resources.styles import CalculatorStyles
 
 
 class CalculatorWindow(QMainWindow):
     """계산기 메인 윈도우"""
-    
-    # 스타일 상수 정의
-    # 색상
-    COLOR_BACKGROUND = "#1e1e1e"
-    COLOR_NUMBER_BUTTON = "#2d2d2d"
-    COLOR_OPERATOR_BUTTON = "#4a4a4a"
-    COLOR_EQUALS_BUTTON = "#0078d4"
-    COLOR_CLEAR_BUTTON = "#d13438"
-    COLOR_TEXT = "white"
-    
-    # 폰트
-    FONT_FAMILY = "Arial"
-    FONT_SIZE_DISPLAY = 24
-    FONT_SIZE_BUTTON = 14
-    
-    # 크기
-    WINDOW_WIDTH = 320
-    WINDOW_HEIGHT = 450
-    BUTTON_MIN_HEIGHT = 50
-    
-    # 스타일 템플릿
-    STYLE_BUTTON_BASE = "color: {color}; border: none; border-radius: 4px;"
-    STYLE_BUTTON_BOLD = "color: {color}; border: none; border-radius: 4px; font-weight: bold;"
     
     def __init__(self):
         """계산기 윈도우 초기화"""
@@ -73,8 +51,8 @@ class CalculatorWindow(QMainWindow):
     def _setup_window(self) -> None:
         """윈도우 기본 설정"""
         self.setWindowTitle("계산기")
-        self.setFixedSize(self.WINDOW_WIDTH, self.WINDOW_HEIGHT)
-        self.setStyleSheet(f"background-color: {self.COLOR_BACKGROUND};")
+        self.setFixedSize(CalculatorStyles.WINDOW_WIDTH, CalculatorStyles.WINDOW_HEIGHT)
+        self.setStyleSheet(CalculatorStyles.get_window_style())
     
     def _setup_main_layout(self) -> QVBoxLayout:
         """
@@ -99,13 +77,9 @@ class CalculatorWindow(QMainWindow):
         self._display = QLineEdit()
         self._display.setReadOnly(True)
         self._display.setAlignment(Qt.AlignRight)
-        self._display.setFont(QFont(self.FONT_FAMILY, self.FONT_SIZE_DISPLAY, QFont.Bold))
+        self._display.setFont(QFont(CalculatorStyles.FONT_FAMILY, CalculatorStyles.FONT_SIZE_DISPLAY, QFont.Bold))
         self._display.setText("0")
-        self._display.setStyleSheet(
-            f"background-color: {self.COLOR_BACKGROUND}; color: {self.COLOR_TEXT}; "
-            f"border: 2px solid {self.COLOR_OPERATOR_BUTTON}; border-radius: 4px; "
-            "padding: 10px;"
-        )
+        self._display.setStyleSheet(CalculatorStyles.get_display_style())
         main_layout.addWidget(self._display)
     
     def _create_button_grid(self, main_layout: QVBoxLayout) -> None:
@@ -206,42 +180,6 @@ class CalculatorWindow(QMainWindow):
         """소수점 버튼 클릭 핸들러"""
         self._controller.input_decimal()
     
-    def _get_button_style(self, style_type: str) -> str:
-        """
-        버튼 스타일 문자열을 반환합니다.
-        
-        Args:
-            style_type: 버튼 스타일 타입 ("number", "operator", "function", "equals", "clear")
-            
-        Returns:
-            CSS 스타일 문자열
-        """
-        style_map = {
-            "number": {
-                "background": self.COLOR_NUMBER_BUTTON,
-                "template": self.STYLE_BUTTON_BASE
-            },
-            "operator": {
-                "background": self.COLOR_OPERATOR_BUTTON,
-                "template": self.STYLE_BUTTON_BASE
-            },
-            "function": {
-                "background": self.COLOR_OPERATOR_BUTTON,
-                "template": self.STYLE_BUTTON_BASE
-            },
-            "equals": {
-                "background": self.COLOR_EQUALS_BUTTON,
-                "template": self.STYLE_BUTTON_BOLD
-            },
-            "clear": {
-                "background": self.COLOR_CLEAR_BUTTON,
-                "template": self.STYLE_BUTTON_BOLD
-            }
-        }
-        
-        style_config = style_map.get(style_type, style_map["number"])
-        return f"background-color: {style_config['background']}; {style_config['template'].format(color=self.COLOR_TEXT)}"
-    
     def _create_button(self, text: str, style_type: str) -> QPushButton:
         """
         버튼을 생성하고 스타일을 적용합니다.
@@ -254,9 +192,9 @@ class CalculatorWindow(QMainWindow):
             생성된 QPushButton 인스턴스
         """
         button = QPushButton(text)
-        button.setFont(QFont(self.FONT_FAMILY, self.FONT_SIZE_BUTTON))
-        button.setMinimumHeight(self.BUTTON_MIN_HEIGHT)
-        button.setStyleSheet(self._get_button_style(style_type))
+        button.setFont(QFont(CalculatorStyles.FONT_FAMILY, CalculatorStyles.FONT_SIZE_BUTTON))
+        button.setMinimumHeight(CalculatorStyles.BUTTON_MIN_HEIGHT)
+        button.setStyleSheet(CalculatorStyles.get_button_style(style_type))
         button.setCursor(Qt.PointingHandCursor)
         return button
     
