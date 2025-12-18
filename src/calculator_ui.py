@@ -2,7 +2,16 @@
 PyQt 계산기 GUI 애플리케이션
 """
 import sys
+import os
 from typing import Optional
+
+# 직접 실행 시 프로젝트 루트를 sys.path에 추가
+# (패키지로 설치된 경우에는 불필요하지만, 직접 실행 시 필요)
+# 파일이 직접 실행될 때만 sys.path 조정
+if not __package__ or __name__ == "__main__":
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QGridLayout,
@@ -208,24 +217,30 @@ class CalculatorWindow(QMainWindow):
             button: 연결할 버튼
             text: 버튼 텍스트 (기능 판별용)
         """
-        # 숫자 버튼 클릭 → controller.input_number()
+        # 버튼 타입별 핸들러 매핑 (딕셔너리 기반)
+        # 숫자 버튼은 isdigit()으로 체크하므로 별도 처리
         if text.isdigit():
             button.clicked.connect(lambda checked, d=text: self._on_number_clicked(d))
-        # 연산자 버튼 클릭 → controller.set_operator()
-        elif text in ("+", "−", "×", "/"):
-            button.clicked.connect(lambda checked, op=text: self._on_operator_clicked(op))
-        # 등호 버튼 클릭 → controller.calculate()
-        elif text == "=":
-            button.clicked.connect(self._on_equals_clicked)
-        # 부호 변경 버튼 클릭 → controller.toggle_sign()
-        elif text == "+/−":
-            button.clicked.connect(self._on_toggle_sign_clicked)
-        # 소수점 버튼 클릭 → controller.input_decimal()
-        elif text == ".":
-            button.clicked.connect(self._on_decimal_clicked)
-        # Clear 버튼 클릭 → controller.clear()
-        elif text == "Clear":
-            button.clicked.connect(self._on_clear_clicked)
+            return
+        
+        # 특정 텍스트에 대한 핸들러 매핑
+        button_handlers = {
+            # 연산자 버튼
+            "+": lambda: self._on_operator_clicked("+"),
+            "−": lambda: self._on_operator_clicked("−"),
+            "×": lambda: self._on_operator_clicked("×"),
+            "/": lambda: self._on_operator_clicked("/"),
+            # 기능 버튼
+            "=": self._on_equals_clicked,
+            "+/−": self._on_toggle_sign_clicked,
+            ".": self._on_decimal_clicked,
+            "Clear": self._on_clear_clicked,
+        }
+        
+        # 딕셔너리에서 핸들러 찾아서 연결
+        handler = button_handlers.get(text)
+        if handler:
+            button.clicked.connect(handler)
     
     def _setup_shortcuts(self) -> None:
         """키보드 단축키 설정"""

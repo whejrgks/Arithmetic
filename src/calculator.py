@@ -2,6 +2,16 @@
 간단한 사칙연산 콘솔 프로그램
 """
 import sys
+import os
+
+# 직접 실행 시 프로젝트 루트를 sys.path에 추가
+# (패키지로 설치된 경우에는 불필요하지만, 직접 실행 시 필요)
+# 파일이 직접 실행될 때만 sys.path 조정
+if not __package__ or __name__ == "__main__":
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
 from src.arithmetic import Arithmetic
 
 
