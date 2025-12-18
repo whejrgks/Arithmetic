@@ -2,13 +2,7 @@
 PyQt 계산기 GUI 애플리케이션
 """
 import sys
-import os
 from typing import Optional
-
-# 프로젝트 루트를 sys.path에 추가
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QGridLayout,
@@ -258,8 +252,12 @@ class CalculatorWindow(QMainWindow):
         QShortcut(QKeySequence(","), self).activated.connect(self._on_decimal_clicked)  # 콤마도 소수점으로
 
 
-def main():
-    """메인 함수"""
+def main() -> None:
+    """
+    메인 함수
+    
+    PyQt 애플리케이션을 초기화하고 계산기 윈도우를 표시합니다.
+    """
     app = QApplication(sys.argv)
     window = CalculatorWindow()
     window.show()

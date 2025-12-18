@@ -2,18 +2,15 @@
 간단한 사칙연산 콘솔 프로그램
 """
 import sys
-import os
-
-# 프로젝트 루트를 sys.path에 추가
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
 from src.arithmetic import Arithmetic
 
 
-def main():
-    """메인 함수"""
+def main() -> None:
+    """
+    메인 함수
+    
+    콘솔에서 사용자 입력을 받아 사칙연산을 수행합니다.
+    """
     arithmetic = Arithmetic()
     
     try:
