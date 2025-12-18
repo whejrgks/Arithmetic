@@ -7,19 +7,36 @@ from src.operations.add import AddOperation
 from src.operations.subtract import SubtractOperation
 from src.operations.multiply import MultiplyOperation
 from src.operations.divide import DivideOperation
+from src.operations.divide_integer import DivideIntegerOperation
 
 
 class OperationFactory:
-    """연산자 문자열을 전략 객체로 변환하는 팩토리 클래스"""
+    """
+    연산자 문자열을 전략 객체로 변환하는 팩토리 클래스
+    
+    연산자와 Strategy 클래스의 매핑을 관리합니다.
+    새로운 연산자를 추가하려면 _operations 딕셔너리에 매핑을 추가하면 됩니다.
+    """
     
     # 연산자 문자열과 전략 클래스 매핑
+    # 새로운 연산자를 추가하려면 여기에 매핑을 추가하면 됩니다.
     _operations: dict[str, type[OperationStrategy]] = {
+        # 덧셈
         "+": AddOperation,
+        
+        # 뺄셈
         "-": SubtractOperation,
-        "×": MultiplyOperation,
-        "*": MultiplyOperation,  # 별표도 곱셈으로 처리
-        "/": DivideOperation,
-        "÷": DivideOperation,  # 나눗셈 기호도 처리
+        
+        # 곱셈
+        "×": MultiplyOperation,  # 곱하기 기호 (U+00D7)
+        "*": MultiplyOperation,   # 별표 (ASCII)
+        
+        # 나눗셈 (소수점 포함)
+        "/": DivideOperation,     # 슬래시 (ASCII)
+        "÷": DivideOperation,     # 나누기 기호 (U+00F7)
+        
+        # 정수 나눗셈 (소수점 버림)
+        "//": DivideIntegerOperation,  # 정수 나눗셈 연산자
     }
     
     @classmethod
@@ -28,7 +45,7 @@ class OperationFactory:
         연산자 문자열에 해당하는 전략 객체를 생성합니다.
         
         Args:
-            operator: 연산자 문자열 (+, -, ×, *, /, ÷)
+            operator: 연산자 문자열 (+, -, ×, *, /, ÷, //)
             
         Returns:
             OperationStrategy 인스턴스, 지원하지 않는 연산자일 경우 None
