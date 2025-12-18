@@ -2,7 +2,7 @@
 사칙연산 클래스
 Strategy 패턴을 사용하여 연산을 수행합니다.
 """
-from typing import Union
+from typing import Union, Optional
 from src.operations.add import AddOperation
 from src.operations.subtract import SubtractOperation
 from src.operations.multiply import MultiplyOperation
@@ -15,16 +15,49 @@ class Arithmetic:
     사칙연산 클래스
     Strategy 패턴을 사용하여 연산 로직을 분리합니다.
     기존 API는 유지하면서 내부적으로 Strategy 패턴을 활용합니다.
+    
+    Lazy Initialization을 사용하여 필요한 Strategy 객체만 생성합니다.
     """
     
     def __init__(self):
         """Arithmetic 클래스 초기화"""
-        # Strategy 객체들을 미리 생성하여 재사용
-        self._add_operation = AddOperation()
-        self._subtract_operation = SubtractOperation()
-        self._multiply_operation = MultiplyOperation()
-        self._divide_operation = DivideOperation()
-        self._divide_integer_operation = DivideIntegerOperation()
+        # Strategy 객체들을 Lazy Initialization으로 생성
+        # 사용하지 않는 연산은 객체를 생성하지 않음
+        self._add_operation: Optional[AddOperation] = None
+        self._subtract_operation: Optional[SubtractOperation] = None
+        self._multiply_operation: Optional[MultiplyOperation] = None
+        self._divide_operation: Optional[DivideOperation] = None
+        self._divide_integer_operation: Optional[DivideIntegerOperation] = None
+    
+    def _get_add_operation(self) -> AddOperation:
+        """덧셈 연산 Strategy를 반환합니다 (Lazy Initialization)."""
+        if self._add_operation is None:
+            self._add_operation = AddOperation()
+        return self._add_operation
+    
+    def _get_subtract_operation(self) -> SubtractOperation:
+        """뺄셈 연산 Strategy를 반환합니다 (Lazy Initialization)."""
+        if self._subtract_operation is None:
+            self._subtract_operation = SubtractOperation()
+        return self._subtract_operation
+    
+    def _get_multiply_operation(self) -> MultiplyOperation:
+        """곱셈 연산 Strategy를 반환합니다 (Lazy Initialization)."""
+        if self._multiply_operation is None:
+            self._multiply_operation = MultiplyOperation()
+        return self._multiply_operation
+    
+    def _get_divide_operation(self) -> DivideOperation:
+        """나눗셈 연산 Strategy를 반환합니다 (Lazy Initialization)."""
+        if self._divide_operation is None:
+            self._divide_operation = DivideOperation()
+        return self._divide_operation
+    
+    def _get_divide_integer_operation(self) -> DivideIntegerOperation:
+        """정수 나눗셈 연산 Strategy를 반환합니다 (Lazy Initialization)."""
+        if self._divide_integer_operation is None:
+            self._divide_integer_operation = DivideIntegerOperation()
+        return self._divide_integer_operation
     
     def add(self, a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
         """
@@ -37,7 +70,7 @@ class Arithmetic:
         Returns:
             a + b의 결과
         """
-        return self._add_operation.execute(a, b)
+        return self._get_add_operation().execute(a, b)
     
     def subtract(self, a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
         """
@@ -50,7 +83,7 @@ class Arithmetic:
         Returns:
             a - b의 결과
         """
-        return self._subtract_operation.execute(a, b)
+        return self._get_subtract_operation().execute(a, b)
     
     def multiply(self, a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
         """
@@ -63,7 +96,7 @@ class Arithmetic:
         Returns:
             a * b의 결과
         """
-        return self._multiply_operation.execute(a, b)
+        return self._get_multiply_operation().execute(a, b)
     
     def divide(self, a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
         """
@@ -79,7 +112,7 @@ class Arithmetic:
         Raises:
             ArithmeticError: b가 0일 경우
         """
-        return self._divide_integer_operation.execute(a, b)
+        return self._get_divide_integer_operation().execute(a, b)
     
     def divide_quotient(self, a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
         """
@@ -95,7 +128,7 @@ class Arithmetic:
         Raises:
             ArithmeticError: b가 0일 경우
         """
-        return self._divide_operation.execute(a, b)
+        return self._get_divide_operation().execute(a, b)
 
 
 if __name__ == "__main__":
