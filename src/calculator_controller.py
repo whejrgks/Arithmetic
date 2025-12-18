@@ -9,7 +9,14 @@ from src.operations.base import OperationStrategy
 
 
 class CalculatorController:
-    """계산기 상태 관리 및 연산 실행 컨트롤러"""
+    """
+    계산기 상태 관리 및 연산 실행 컨트롤러
+    
+    책임:
+    - 계산기 상태 관리 (현재 값, 이전 값, 연산자, 입력 모드)
+    - 연산 실행 및 결과 계산
+    - 예외 처리 및 에러 상태 관리
+    """
     
     def __init__(self, arithmetic: Optional[Arithmetic] = None):
         """
@@ -19,10 +26,11 @@ class CalculatorController:
             arithmetic: Arithmetic 인스턴스 (의존성 주입, None일 경우 새로 생성)
         """
         self._arithmetic = arithmetic or Arithmetic()
-        self._current_value: str = "0"
-        self._previous_value: Optional[float] = None
-        self._operator: Optional[str] = None
-        self._waiting_for_operand: bool = False
+        # 상태 관리 변수
+        self._current_value: str = "0"  # 현재 입력/표시 값
+        self._previous_value: Optional[float] = None  # 이전 값
+        self._operator: Optional[str] = None  # 선택된 연산자
+        self._waiting_for_operand: bool = False  # 새 피연산자 입력 대기 여부
         self._display_callback: Optional[Callable[[str], None]] = None
     
     def set_display_callback(self, callback: Callable[[str], None]) -> None:
@@ -46,6 +54,17 @@ class CalculatorController:
         Args:
             digit: 입력된 숫자 문자열 (0-9)
         """
+        # 에러 상태일 경우 Clear 처리
+        if self._current_value == "Error":
+            self.clear()
+            self._current_value = digit
+            self._update_display()
+            return
+        
+        # 숫자 검증
+        if not digit.isdigit() or len(digit) != 1:
+            return
+        
         if self._waiting_for_operand:
             self._current_value = digit
             self._waiting_for_operand = False
@@ -57,7 +76,16 @@ class CalculatorController:
         self._update_display()
     
     def input_decimal(self) -> None:
-        """소수점 입력을 처리합니다."""
+        """
+        소수점 입력을 처리합니다.
+        """
+        # 에러 상태일 경우 Clear 처리
+        if self._current_value == "Error":
+            self.clear()
+            self._current_value = "0."
+            self._update_display()
+            return
+        
         if self._waiting_for_operand:
             self._current_value = "0."
             self._waiting_for_operand = False
@@ -72,16 +100,28 @@ class CalculatorController:
         Args:
             operator: 연산자 문자열 (+, -, ×, /)
         """
+        # 에러 상태일 경우 무시
+        if self._current_value == "Error":
+            return
+        
         if not OperationFactory.is_supported(operator):
             return
         
-        if self._operator and not self._waiting_for_operand:
-            # 이전 연산이 있으면 먼저 계산
+        # 이전 연산이 있고, 피연산자를 기다리는 상태가 아니면 먼저 계산
+        if self._operator is not None and not self._waiting_for_operand:
             self.calculate()
+            # 계산 후 에러 상태면 연산자 설정 중단
+            if self._current_value == "Error":
+                return
         
-        self._previous_value = float(self._current_value)
-        self._operator = operator
-        self._waiting_for_operand = True
+        try:
+            # 현재 값을 이전 값으로 저장
+            self._previous_value = float(self._current_value)
+            self._operator = operator
+            self._waiting_for_operand = True
+        except (ValueError, OverflowError):
+            self._current_value = "Error"
+            self._update_display()
     
     def calculate(self) -> None:
         """현재 연산을 실행합니다."""
@@ -103,10 +143,16 @@ class CalculatorController:
             result = operation.execute(self._previous_value, current)
             
             # 결과를 문자열로 변환 (정수면 정수로, 소수면 소수로)
-            if result == int(result):
+            # 오버플로우 체크
+            if abs(result) > 1e15:
+                self._current_value = "Error"
+            elif result == int(result):
                 self._current_value = str(int(result))
             else:
-                self._current_value = str(result)
+                # 소수점 이하 불필요한 0 제거
+                self._current_value = str(result).rstrip('0').rstrip('.')
+                if not self._current_value or self._current_value == "-":
+                    self._current_value = "0"
             
             self._operator = None
             self._previous_value = None
@@ -132,8 +178,14 @@ class CalculatorController:
         self._update_display()
     
     def toggle_sign(self) -> None:
-        """현재 값의 부호를 변경합니다."""
-        if self._current_value != "0":
+        """
+        현재 값의 부호를 변경합니다 (+/-).
+        """
+        # 에러 상태일 경우 무시
+        if self._current_value == "Error":
+            return
+        
+        if self._current_value != "0" and self._current_value != "0.":
             if self._current_value.startswith("-"):
                 self._current_value = self._current_value[1:]
             else:
