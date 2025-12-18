@@ -146,3 +146,151 @@ python -m pytest tests/
 - 작성자: 홍길동
 - 승인자: 박문수
 
+---
+
+## Refactory 시 해야할 일
+
+### 리팩토링 단계별 방법
+
+#### 1단계: 아키텍처 설계 (SOLID 준수)
+
+##### 1.1 계층 구조 설계
+
+```
+┌─────────────────┐
+│   GUI Layer     │  (PyQt UI)
+│  (calculator_ui.py)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│  Controller     │  (계산기 상태 관리)
+│ (calculator_controller.py)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│  Business Logic │  (기존 Arithmetic 유지)
+│  (arithmetic.py)
+└─────────────────┘
+```
+
+##### 1.2 디자인 패턴 적용
+
+- **Strategy Pattern**: 연산자별 전략 객체로 분리
+- **Command Pattern**: 버튼 클릭을 명령 객체로 처리
+- **Observer Pattern**: UI 업데이트를 위한 상태 변경 알림
+
+---
+
+#### 2단계: 비즈니스 로직 리팩토링
+
+##### 2.1 연산자 전략 패턴 구현
+
+- **목적**: Open/Closed 원칙 준수, if-elif 체인 제거
+- **방법**:
+  - `OperationStrategy` 추상 클래스 생성
+  - 각 연산자별 전략 클래스 구현 (`AddOperation`, `SubtractOperation`, `MultiplyOperation`, `DivideOperation`)
+  - `OperationFactory`로 연산자 문자열 → 전략 객체 매핑
+
+##### 2.2 Arithmetic 클래스 개선
+
+- **현재**: 각 메서드가 독립적으로 존재
+- **개선**: Strategy 패턴을 사용하도록 리팩토링 (선택사항, 기존 API 유지 가능)
+
+---
+
+#### 3단계: 컨트롤러 계층 구현
+
+##### 3.1 CalculatorController 클래스 생성
+
+- **책임**:
+  - 계산기 상태 관리 (현재 값, 이전 값, 연산자, 입력 모드)
+  - 연산 실행 및 결과 계산
+  - 예외 처리 및 에러 상태 관리
+
+- **상태 관리**:
+  - `current_value`: 현재 입력/표시 값
+  - `previous_value`: 이전 값
+  - `operator`: 선택된 연산자
+  - `waiting_for_operand`: 새 피연산자 입력 대기 여부
+
+##### 3.2 계산기 로직 구현
+
+- 숫자 입력 처리
+- 연산자 선택 처리
+- 등호(=) 처리
+- 초기화(Clear) 처리
+- 부호 변경(+/-) 처리
+- 소수점 처리
+
+---
+
+#### 4단계: PyQt GUI 구현
+
+##### 4.1 UI 컴포넌트 설계
+
+- **CalculatorWindow** (QMainWindow 또는 QWidget)
+  - 디스플레이: QLineEdit 또는 QLabel (읽기 전용)
+  - 버튼 그리드: QGridLayout
+  - 버튼 구성:
+    - 숫자 버튼 (0-9)
+    - 연산자 버튼 (+, -, ×, /)
+    - 기능 버튼 (=, +/-, Clear, .)
+
+##### 4.2 UI와 컨트롤러 연결
+
+- **시그널-슬롯 연결**:
+  - 숫자 버튼 클릭 → `controller.input_number()`
+  - 연산자 버튼 클릭 → `controller.set_operator()`
+  - 등호 버튼 클릭 → `controller.calculate()`
+  - Clear 버튼 클릭 → `controller.clear()`
+
+- **UI 업데이트**:
+  - 컨트롤러 상태 변경 시 디스플레이 업데이트
+  - Observer 패턴 또는 직접 호출 방식 선택
+
+---
+
+#### 5단계: 리소스 및 설정 분리
+
+##### 5.1 문자열 외부화
+
+- `resources/strings.py` 또는 `config/messages.py` 생성
+- 한국어 메시지를 상수로 정의
+- 국제화(i18n) 대비 구조
+
+##### 5.2 스타일 분리
+
+- `resources/styles.py` 또는 QSS 파일
+- 버튼 색상, 크기, 폰트 등 스타일 정의
+- 이미지에서 본 디자인 반영 (파란색 = 버튼 등)
+
+---
+
+#### 6단계: 예외 처리 및 에러 핸들링
+
+##### 6.1 예외 처리 전략
+
+- 비즈니스 로직 예외: `ArithmeticError` (0으로 나누기)
+- UI 예외: 잘못된 입력, 오버플로우 등
+- 사용자 친화적 메시지 표시
+
+##### 6.2 에러 상태 관리
+
+- 에러 발생 시 디스플레이에 메시지 표시
+- 다음 입력 시 자동 초기화 또는 명시적 Clear 필요
+
+---
+
+#### 7단계: 테스트 가능성 개선
+
+##### 7.1 의존성 주입
+
+- Controller가 Arithmetic에 의존하되, 인터페이스로 추상화
+- 테스트 시 Mock 객체 주입 가능
+
+##### 7.2 단위 테스트 구조
+
+- Controller 로직 테스트 (GUI 없이)
+- Arithmetic 로직 테스트 (기존 유지)
+- 통합 테스트 (선택사항)
+
