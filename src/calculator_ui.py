@@ -50,7 +50,7 @@ class CalculatorWindow(QMainWindow):
     
     def _setup_window(self) -> None:
         """윈도우 기본 설정"""
-        self.setWindowTitle("계산기")
+        self.setWindowTitle(CalculatorStyles.WINDOW_TITLE)
         self.setFixedSize(CalculatorStyles.WINDOW_WIDTH, CalculatorStyles.WINDOW_HEIGHT)
         self.setStyleSheet(CalculatorStyles.get_window_style())
     
@@ -78,7 +78,7 @@ class CalculatorWindow(QMainWindow):
         self._display.setReadOnly(True)
         self._display.setAlignment(Qt.AlignRight)
         self._display.setFont(QFont(CalculatorStyles.FONT_FAMILY, CalculatorStyles.FONT_SIZE_DISPLAY, QFont.Bold))
-        self._display.setText("0")
+        self._display.setText(CalculatorStyles.DISPLAY_INITIAL_VALUE)
         self._display.setStyleSheet(CalculatorStyles.get_display_style())
         main_layout.addWidget(self._display)
     
@@ -127,12 +127,22 @@ class CalculatorWindow(QMainWindow):
         # 이미지에는 없지만 기능상 필요하므로 추가
         divide_button = self._create_button("/", "operator")
         self._connect_button_signal(divide_button, "/")
-        button_layout.addWidget(divide_button, 4, 3)  # Clear 버튼 옆에 배치
+        button_layout.addWidget(
+            divide_button, 
+            CalculatorStyles.BUTTON_GRID_ROW_DIVIDE, 
+            CalculatorStyles.BUTTON_GRID_COL_DIVIDE
+        )
         
         # Clear 버튼 (별도 추가)
         clear_button = self._create_button("Clear", "clear")
         self._connect_button_signal(clear_button, "Clear")
-        button_layout.addWidget(clear_button, 4, 0, 1, 3)  # 나눗셈 버튼 공간 확보
+        button_layout.addWidget(
+            clear_button, 
+            CalculatorStyles.BUTTON_GRID_ROW_CLEAR, 
+            CalculatorStyles.BUTTON_GRID_COL_CLEAR_START, 
+            1, 
+            CalculatorStyles.BUTTON_GRID_CLEAR_SPAN
+        )
     
     def _update_display(self, value: str) -> None:
         """

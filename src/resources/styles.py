@@ -34,6 +34,17 @@ class CalculatorStyles:
     DISPLAY_PADDING = "10px"
     DISPLAY_BORDER_WIDTH = "2px"
     DISPLAY_BORDER_RADIUS = "4px"
+    DISPLAY_INITIAL_VALUE = "0"
+    
+    # 윈도우 설정
+    WINDOW_TITLE = "계산기"
+    
+    # 버튼 그리드 레이아웃 상수
+    BUTTON_GRID_ROW_DIVIDE = 4
+    BUTTON_GRID_COL_DIVIDE = 3
+    BUTTON_GRID_ROW_CLEAR = 4
+    BUTTON_GRID_COL_CLEAR_START = 0
+    BUTTON_GRID_CLEAR_SPAN = 3
     
     @classmethod
     def get_display_style(cls) -> str:
