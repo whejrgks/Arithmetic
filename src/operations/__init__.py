@@ -6,6 +6,7 @@ from src.operations.add import AddOperation
 from src.operations.subtract import SubtractOperation
 from src.operations.multiply import MultiplyOperation
 from src.operations.divide import DivideOperation
+from src.operations.divide_integer import DivideIntegerOperation
 from src.operations.factory import OperationFactory
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     'SubtractOperation',
     'MultiplyOperation',
     'DivideOperation',
+    'DivideIntegerOperation',
     'OperationFactory',
 ]
 

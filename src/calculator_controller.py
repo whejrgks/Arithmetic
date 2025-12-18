@@ -97,17 +97,10 @@ class CalculatorController:
                 self._update_display()
                 return
             
-            # Arithmetic 클래스를 사용하여 연산 실행
-            if self._operator == "+":
-                result = self._arithmetic.add(self._previous_value, current)
-            elif self._operator == "-":
-                result = self._arithmetic.subtract(self._previous_value, current)
-            elif self._operator in ("×", "*"):
-                result = self._arithmetic.multiply(self._previous_value, current)
-            elif self._operator in ("/", "÷"):
-                result = self._arithmetic.divide_quotient(self._previous_value, current)
-            else:
-                result = operation.execute(self._previous_value, current)
+            # Strategy 패턴을 사용하여 연산 실행 (if-elif 체인 제거)
+            # Arithmetic 클래스도 내부적으로 Strategy 패턴을 사용하므로
+            # 일관성 있게 Strategy를 직접 사용
+            result = operation.execute(self._previous_value, current)
             
             # 결과를 문자열로 변환 (정수면 정수로, 소수면 소수로)
             if result == int(result):
