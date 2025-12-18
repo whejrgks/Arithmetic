@@ -18,6 +18,11 @@ class CalculatorController:
     - 예외 처리 및 에러 상태 관리
     """
     
+    # 상수 정의
+    ERROR_STATE = "Error"  # 에러 상태 문자열
+    INITIAL_VALUE = "0"  # 초기 디스플레이 값
+    MAX_DISPLAY_VALUE = 1e15  # 디스플레이 최대 값 (오버플로우 체크)
+    
     def __init__(self, arithmetic: Optional[Arithmetic] = None):
         """
         CalculatorController 초기화
@@ -27,7 +32,7 @@ class CalculatorController:
         """
         self._arithmetic = arithmetic or Arithmetic()
         # 상태 관리 변수
-        self._current_value: str = "0"  # 현재 입력/표시 값
+        self._current_value: str = self.INITIAL_VALUE  # 현재 입력/표시 값
         self._previous_value: Optional[float] = None  # 이전 값
         self._operator: Optional[str] = None  # 선택된 연산자
         self._waiting_for_operand: bool = False  # 새 피연산자 입력 대기 여부
@@ -55,10 +60,8 @@ class CalculatorController:
             digit: 입력된 숫자 문자열 (0-9)
         """
         # 에러 상태일 경우 Clear 처리
-        if self._current_value == "Error":
-            self.clear()
-            self._current_value = digit
-            self._update_display()
+        if self._is_error_state():
+            self._handle_error_state_for_input(digit)
             return
         
         # 숫자 검증
@@ -69,7 +72,7 @@ class CalculatorController:
             self._current_value = digit
             self._waiting_for_operand = False
         else:
-            if self._current_value == "0":
+            if self._current_value == self.INITIAL_VALUE:
                 self._current_value = digit
             else:
                 self._current_value += digit
@@ -80,10 +83,8 @@ class CalculatorController:
         소수점 입력을 처리합니다.
         """
         # 에러 상태일 경우 Clear 처리
-        if self._current_value == "Error":
-            self.clear()
-            self._current_value = "0."
-            self._update_display()
+        if self._is_error_state():
+            self._handle_error_state_for_decimal()
             return
         
         if self._waiting_for_operand:
@@ -101,7 +102,7 @@ class CalculatorController:
             operator: 연산자 문자열 (+, -, ×, *, /, ÷ 등 UI 표시용 기호 포함)
         """
         # 에러 상태일 경우 무시
-        if self._current_value == "Error":
+        if self._is_error_state():
             return
         
         # UI 표시용 기호를 내부 기호로 정규화
@@ -114,7 +115,7 @@ class CalculatorController:
         if self._operator is not None and not self._waiting_for_operand:
             self.calculate()
             # 계산 후 에러 상태면 연산자 설정 중단
-            if self._current_value == "Error":
+            if self._is_error_state():
                 return
         
         try:
@@ -123,8 +124,7 @@ class CalculatorController:
             self._operator = operator
             self._waiting_for_operand = True
         except (ValueError, OverflowError):
-            self._current_value = "Error"
-            self._update_display()
+            self._set_error_state()
     
     def calculate(self) -> None:
         """현재 연산을 실행합니다."""
@@ -136,45 +136,27 @@ class CalculatorController:
             operation: Optional[OperationStrategy] = OperationFactory.create(self._operator)
             
             if operation is None:
-                self._current_value = "Error"
-                self._update_display()
+                self._set_error_state()
                 return
             
-            # Strategy 패턴을 사용하여 연산 실행 (if-elif 체인 제거)
-            # Arithmetic 클래스도 내부적으로 Strategy 패턴을 사용하므로
-            # 일관성 있게 Strategy를 직접 사용
+            # Strategy 패턴을 사용하여 연산 실행
             result = operation.execute(self._previous_value, current)
             
-            # 결과를 문자열로 변환 (정수면 정수로, 소수면 소수로)
-            # 오버플로우 체크
-            if abs(result) > 1e15:
-                self._current_value = "Error"
-            elif result == int(result):
-                self._current_value = str(int(result))
-            else:
-                # 소수점 이하 불필요한 0 제거
-                self._current_value = str(result).rstrip('0').rstrip('.')
-                if not self._current_value or self._current_value == "-":
-                    self._current_value = "0"
+            # 결과 포맷팅
+            self._current_value = self._format_result(result)
             
-            self._operator = None
-            self._previous_value = None
-            self._waiting_for_operand = True
+            # 상태 초기화
+            self._reset_operation_state()
             self._update_display()
             
-        except ArithmeticError as e:
-            self._current_value = "Error"
-            self._operator = None
-            self._previous_value = None
-            self._waiting_for_operand = True
-            self._update_display()
-        except Exception as e:
-            self._current_value = "Error"
-            self._update_display()
+        except ArithmeticError:
+            self._set_error_state(reset_operation=True)
+        except Exception:
+            self._set_error_state()
     
     def clear(self) -> None:
         """계산기를 초기화합니다."""
-        self._current_value = "0"
+        self._current_value = self.INITIAL_VALUE
         self._previous_value = None
         self._operator = None
         self._waiting_for_operand = False
@@ -185,10 +167,10 @@ class CalculatorController:
         현재 값의 부호를 변경합니다 (+/-).
         """
         # 에러 상태일 경우 무시
-        if self._current_value == "Error":
+        if self._is_error_state():
             return
         
-        if self._current_value != "0" and self._current_value != "0.":
+        if self._current_value != self.INITIAL_VALUE and self._current_value != "0.":
             if self._current_value.startswith("-"):
                 self._current_value = self._current_value[1:]
             else:
@@ -223,4 +205,75 @@ class CalculatorController:
         
         # 매핑에 있으면 변환, 없으면 그대로 반환
         return operator_map.get(operator, operator)
+    
+    def _is_error_state(self) -> bool:
+        """
+        현재 에러 상태인지 확인합니다.
+        
+        Returns:
+            에러 상태일 경우 True, 그렇지 않으면 False
+        """
+        return self._current_value == self.ERROR_STATE
+    
+    def _set_error_state(self, reset_operation: bool = False) -> None:
+        """
+        에러 상태로 설정합니다.
+        
+        Args:
+            reset_operation: 연산 상태도 초기화할지 여부
+        """
+        self._current_value = self.ERROR_STATE
+        if reset_operation:
+            self._reset_operation_state()
+        self._update_display()
+    
+    def _reset_operation_state(self) -> None:
+        """연산 상태를 초기화합니다."""
+        self._operator = None
+        self._previous_value = None
+        self._waiting_for_operand = True
+    
+    def _handle_error_state_for_input(self, digit: str) -> None:
+        """
+        에러 상태에서 숫자 입력을 처리합니다.
+        
+        Args:
+            digit: 입력된 숫자
+        """
+        self.clear()
+        self._current_value = digit
+        self._update_display()
+    
+    def _handle_error_state_for_decimal(self) -> None:
+        """에러 상태에서 소수점 입력을 처리합니다."""
+        self.clear()
+        self._current_value = "0."
+        self._update_display()
+    
+    def _format_result(self, result: float) -> str:
+        """
+        계산 결과를 디스플레이용 문자열로 포맷팅합니다.
+        
+        Args:
+            result: 계산 결과 (float)
+            
+        Returns:
+            포맷팅된 결과 문자열
+        """
+        # 오버플로우 체크
+        if abs(result) > self.MAX_DISPLAY_VALUE:
+            return self.ERROR_STATE
+        
+        # 정수인 경우 정수로 표시
+        if result == int(result):
+            return str(int(result))
+        
+        # 소수점 이하 불필요한 0 제거
+        formatted = str(result).rstrip('0').rstrip('.')
+        
+        # 빈 문자열이거나 "-"만 있는 경우 "0"으로 처리
+        if not formatted or formatted == "-":
+            return self.INITIAL_VALUE
+        
+        return formatted
 
