@@ -1,29 +1,134 @@
+"""
+사칙연산 클래스
+Strategy 패턴을 사용하여 연산을 수행합니다.
+"""
+from typing import Union, Optional
+from src.operations.add import AddOperation
+from src.operations.subtract import SubtractOperation
+from src.operations.multiply import MultiplyOperation
+from src.operations.divide import DivideOperation
+from src.operations.divide_integer import DivideIntegerOperation
+
+
 class Arithmetic:
-    """사칙연산 클래스"""
+    """
+    사칙연산 클래스
+    Strategy 패턴을 사용하여 연산 로직을 분리합니다.
+    기존 API는 유지하면서 내부적으로 Strategy 패턴을 활용합니다.
     
-    def add(self, a, b):
-        """덧셈 연산"""
-        return a + b
+    Lazy Initialization을 사용하여 필요한 Strategy 객체만 생성합니다.
+    """
     
-    def subtract(self, a, b):
-        """뺄셈 연산"""
-        return a - b
+    def __init__(self):
+        """Arithmetic 클래스 초기화"""
+        # Strategy 객체들을 Lazy Initialization으로 생성
+        # 사용하지 않는 연산은 객체를 생성하지 않음
+        self._add_operation: Optional[AddOperation] = None
+        self._subtract_operation: Optional[SubtractOperation] = None
+        self._multiply_operation: Optional[MultiplyOperation] = None
+        self._divide_operation: Optional[DivideOperation] = None
+        self._divide_integer_operation: Optional[DivideIntegerOperation] = None
     
-    def multiply(self, a, b):
-        """곱셈 연산"""
-        return a * b
+    def _get_add_operation(self) -> AddOperation:
+        """덧셈 연산 Strategy를 반환합니다 (Lazy Initialization)."""
+        if self._add_operation is None:
+            self._add_operation = AddOperation()
+        return self._add_operation
     
-    def divide(self, a, b):
-        """나눗셈 연산 (정수 나눗셈, 소수점 버림)"""
-        if b == 0:
-            raise ArithmeticError("Division by zero")
-        return a // b
+    def _get_subtract_operation(self) -> SubtractOperation:
+        """뺄셈 연산 Strategy를 반환합니다 (Lazy Initialization)."""
+        if self._subtract_operation is None:
+            self._subtract_operation = SubtractOperation()
+        return self._subtract_operation
     
-    def divide_quotient(self, a, b):
-        """몫 계산 연산 (소수점 포함)"""
-        if b == 0:
-            raise ArithmeticError("Division by zero")
-        return a / b
+    def _get_multiply_operation(self) -> MultiplyOperation:
+        """곱셈 연산 Strategy를 반환합니다 (Lazy Initialization)."""
+        if self._multiply_operation is None:
+            self._multiply_operation = MultiplyOperation()
+        return self._multiply_operation
+    
+    def _get_divide_operation(self) -> DivideOperation:
+        """나눗셈 연산 Strategy를 반환합니다 (Lazy Initialization)."""
+        if self._divide_operation is None:
+            self._divide_operation = DivideOperation()
+        return self._divide_operation
+    
+    def _get_divide_integer_operation(self) -> DivideIntegerOperation:
+        """정수 나눗셈 연산 Strategy를 반환합니다 (Lazy Initialization)."""
+        if self._divide_integer_operation is None:
+            self._divide_integer_operation = DivideIntegerOperation()
+        return self._divide_integer_operation
+    
+    def add(self, a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
+        """
+        덧셈 연산
+        
+        Args:
+            a: 첫 번째 피연산자
+            b: 두 번째 피연산자
+            
+        Returns:
+            a + b의 결과
+        """
+        return self._get_add_operation().execute(a, b)
+    
+    def subtract(self, a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
+        """
+        뺄셈 연산
+        
+        Args:
+            a: 첫 번째 피연산자
+            b: 두 번째 피연산자
+            
+        Returns:
+            a - b의 결과
+        """
+        return self._get_subtract_operation().execute(a, b)
+    
+    def multiply(self, a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
+        """
+        곱셈 연산
+        
+        Args:
+            a: 첫 번째 피연산자
+            b: 두 번째 피연산자
+            
+        Returns:
+            a * b의 결과
+        """
+        return self._get_multiply_operation().execute(a, b)
+    
+    def divide(self, a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
+        """
+        나눗셈 연산 (정수 나눗셈, 소수점 버림)
+        
+        Args:
+            a: 첫 번째 피연산자
+            b: 두 번째 피연산자
+            
+        Returns:
+            a // b의 결과 (정수 나눗셈)
+            
+        Raises:
+            ArithmeticError: b가 0일 경우
+        """
+        return self._get_divide_integer_operation().execute(a, b)
+    
+    def divide_quotient(self, a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
+        """
+        몫 계산 연산 (소수점 포함)
+        
+        Args:
+            a: 첫 번째 피연산자
+            b: 두 번째 피연산자
+            
+        Returns:
+            a / b의 결과 (소수점 포함)
+            
+        Raises:
+            ArithmeticError: b가 0일 경우
+        """
+        return self._get_divide_operation().execute(a, b)
 
 
 if __name__ == "__main__":
